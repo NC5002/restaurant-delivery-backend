@@ -2,10 +2,10 @@ package com.example.discovery;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer; // <-- AGREGAR ESTA IMPORTACIÓN
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer; // <-- ASEGÚRATE DE QUE ESTÉ
 
 @SpringBootApplication
-@EnableEurekaServer // <-- AGREGAR ESTA ANOTACIÓN
+@EnableEurekaServer // <-- ASEGÚRATE DE QUE ESTÉ
 public class DiscoveryApplication {
 
     public static void main(String[] args) {
