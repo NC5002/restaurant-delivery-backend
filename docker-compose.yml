@@ -1,15 +1,16 @@
 # docker-compose.yml
-version: '3.9'
+# version: '3.9'  # <--- ELIMINADO: Esta línea es obsoleta.
+
 services:
   mysql:
     image: mysql:8
     environment:
       MYSQL_ROOT_PASSWORD: m4vwKInT
-      MYSQL_DATABASE: restaurant_delivery_db
+      # MYSQL_DATABASE: restaurant_delivery_db # <--- ELIMINADO: Ya no es necesario, cada servicio creará su DB.
     ports:
       - "3306:3306"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql # <--- CAMBIO: Se eliminó la línea de init.sql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pm4vwKInT"]
       interval: 10s
@@ -19,13 +20,15 @@ services:
   eureka:
     build: ./discovery
     ports: ["8761:8761"]
-    depends_on: [mysql]
-    healthcheck: # <--- ¡NUEVA CONFIGURACIÓN PARA EUREKA!
-      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"] # Usa el endpoint de salud de Spring Boot
+    depends_on:
+      mysql:
+        condition: service_healthy # <--- CAMBIO: Eureka ahora espera a que MySQL esté saludable.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s # Espera 20 segundos antes de empezar a chequear
+      start_period: 20s
 
   gateway:
     build: ./gateway
@@ -33,27 +36,33 @@ services:
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
     depends_on:
-      eureka: # <--- CAMBIO: Espera que Eureka esté healthy
+      eureka:
         condition: service_healthy
 
   catalog:
     build: ./catalog
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_db
+      # <--- CAMBIO CLAVE: Apunta a su propia base de datos.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_catalog_db?createDatabaseIfNotExist=true
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
     depends_on:
       mysql:
         condition: service_healthy
-      eureka: # <--- CAMBIO: Espera que Eureka esté healthy
+      eureka:
         condition: service_healthy
 
   order:
     build: ./order
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_db
+      # <--- CAMBIO CLAVE: Apunta a su propia base de datos.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_order_db?createDatabaseIfNotExist=true
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
     depends_on:
       mysql:
         condition: service_healthy
-      eureka: # <--- CAMBIO: Espera que Eureka esté healthy
+      eureka:
         condition: service_healthy
+
+# Define el volumen para persistir los datos de MySQL
+volumes:
+  mysql_data:
