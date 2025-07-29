@@ -1,17 +1,18 @@
-package com.example.catalog.domain; // <--- ¡IMPORTANTE! Ajusta este paquete si el tuyo es diferente
+package com.example.catalog.domain;
 
-import jakarta.persistence.*;
-import lombok.Data; // Incluye @Getter, @Setter, @ToString, @EqualsAndHashCode
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType; // <--- ASEGÚRATE DE IMPORTAR ESTO
+import jakarta.persistence.Id;
+import lombok.Data;
 
-@Entity // Indica que esta clase es una entidad JPA
-@Table(name = "categories") // Especifica el nombre de la tabla
-@Data // Genera automáticamente getters, setters, toString, equals y hashCode (Lombok)
+@Entity
+@Data
 public class Category {
 
-    @Id // Marca este campo como la clave primaria
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Configura la generación automática de IDs
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // <--- ¡ESTE ES EL CAMBIO CLAVE!
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 50) // No nula, única, longitud máxima 50
     private String name;
 }
