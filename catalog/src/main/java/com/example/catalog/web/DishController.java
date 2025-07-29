@@ -11,19 +11,19 @@ import org.springframework.validation.annotation.Validated; // Para validación 
 import org.springframework.web.bind.annotation.*; // Anotaciones REST
 
 @RestController // Marca esta clase como un controlador REST
-@RequestMapping("/api/v1/dishes") // Define la ruta base para todos los endpoints de este controlador
+@RequestMapping("/dishes") // <--- ¡CAMBIO CLAVE AQUÍ! Ahora espera solo "/dishes"
 @RequiredArgsConstructor // Genera un constructor con los campos 'final'
 @Validated // Habilita la validación de Spring para los métodos de este controlador
 public class DishController {
 
     private final DishService svc; // Inyección del servicio de platos
 
-    @GetMapping // Mapea las solicitudes GET a /api/v1/dishes
+    @GetMapping // Mapea las solicitudes GET a /dishes (relativo a la base)
     public Page<DishDTO> list(Pageable p) {
         return svc.list(p); // Llama al servicio para obtener la lista de platos paginada
     }
 
-    @PostMapping // Mapea las solicitudes POST a /api/v1/dishes
+    @PostMapping // Mapea las solicitudes POST a /dishes (relativo a la base)
     public ResponseEntity<DishDTO> create(
             @Valid @RequestBody DishDTO dto) { // Recibe un DishDTO validado en el cuerpo de la petición
         // Guarda el nuevo plato y devuelve una respuesta 201 Created con el plato guardado
