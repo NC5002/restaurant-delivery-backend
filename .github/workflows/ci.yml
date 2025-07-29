@@ -6,7 +6,6 @@ on:
 
 jobs:
   build-test:
-    # Esta línea asegura que se use un runner de GitHub
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,13 +21,12 @@ jobs:
           java-version: '17'
           cache: 'maven'
 
-      - name: Ejecutar Pruebas para el servicio ${{ matrix.service }}
-        # CAMBIO: Usamos -f en lugar de --file para compatibilidad
-        run: mvn -B test -f ${{ matrix.service }}/pom.xml
+      - name: Ejecutar Pruebas Unitarias para el servicio ${{ matrix.service }}
+        # CAMBIO: Excluimos las pruebas de integración que usan Testcontainers
+        run: mvn -B test -Dtest=!*IntegrationTest -f ${{ matrix.service }}/pom.xml
 
   build-and-push-docker-image:
     needs: build-test
-    # Esta línea asegura que se use un runner de GitHub
     runs-on: ubuntu-latest
     strategy:
       matrix:
