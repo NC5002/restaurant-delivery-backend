@@ -1,16 +1,15 @@
-# Usar una imagen base de OpenJDK para Java 17
-FROM openjdk:17-jdk-slim
-
-# Establecer el directorio de trabajo dentro del contenedor
+# --- Etapa 1: Construcción (Build Stage) ---
+FROM maven:3.9-amazoncorretto-17 AS build
 WORKDIR /app
+COPY pom.xml ./
+RUN mvn dependency:go-offline
+COPY src ./src
+RUN mvn package -DskipTests
 
-# Copiar el ejecutable Maven (JAR) generado de tu aplicación
-# Asume que ya has construido el proyecto Maven (mvn clean package)
-# Antes de ejecutar docker compose up, necesitas construir tus jars localmente
-COPY target/*.jar app.jar
-
-# Exponer el puerto en el que la aplicación Spring Boot se ejecutará
+# --- Etapa 2: Ejecución (Final Stage) ---
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+# CAMBIO: Copia el JAR del servicio 'gateway'
+COPY --from=build /app/target/gateway-*.jar app.jar
 EXPOSE 8080
-
-# Comando para ejecutar la aplicación cuando el contenedor se inicie
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java","-jar","app.jar"]

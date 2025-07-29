@@ -1,16 +1,39 @@
-# Usar una imagen base de OpenJDK para Java 17
-FROM openjdk:17-jdk-slim
+# --- Etapa 1: Construcción (Build Stage) ---
+# Usa una imagen de Maven que incluye Java 17 para compilar el proyecto.
+# La nombramos "build" para poder referenciarla después.
+FROM maven:3.9-amazoncorretto-17 AS build
 
-# Establecer el directorio de trabajo dentro del contenedor
+# Establece el directorio de trabajo para la compilación.
 WORKDIR /app
 
-# Copiar el ejecutable Maven (JAR) generado de tu aplicación
-# Asume que ya has construido el proyecto Maven (mvn clean package)
-# Antes de ejecutar docker compose up, necesitas construir tus jars localmente
-COPY target/*.jar app.jar
+# Copia solo el pom.xml para descargar las dependencias.
+# Esto aprovecha el cache de Docker: si no cambias las dependencias,
+# este paso no se vuelve a ejecutar, haciendo el build más rápido.
+COPY pom.xml ./
+RUN mvn dependency:go-offline
 
-# Exponer el puerto en el que la aplicación Spring Boot se ejecutará
+# Copia el resto del código fuente de tu aplicación.
+COPY src ./src
+
+# Compila la aplicación y crea el archivo JAR.
+# Saltamos las pruebas porque ya se habrán ejecutado en un paso anterior del CI.
+RUN mvn package -DskipTests
+
+
+# --- Etapa 2: Ejecución (Final Stage) ---
+# Usa una imagen ligera que solo contiene Java para ejecutar la aplicación.
+# Esto hace que la imagen final sea mucho más pequeña y segura.
+FROM openjdk:17-jdk-slim
+
+# Establece el directorio de trabajo final.
+WORKDIR /app
+
+# Copia SOLAMENTE el archivo JAR resultante de la etapa 'build'.
+# Asegúrate de que el artifactId en tu pom.xml sea 'catalog'.
+COPY --from=build /app/target/catalog-*.jar app.jar
+
+# Expone el puerto que usa la aplicación.
 EXPOSE 8080
 
-# Comando para ejecutar la aplicación cuando el contenedor se inicie
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Comando para correr la aplicación cuando el contenedor inicie.
+ENTRYPOINT ["java","-jar","app.jar"]
