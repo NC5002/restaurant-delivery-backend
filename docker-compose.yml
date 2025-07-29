@@ -4,18 +4,17 @@ services:
   mysql:
     image: mysql:8
     environment:
-      MYSQL_ROOT_PASSWORD: root
-    ports: ["3306:3306"]
-    volumes: ['./init.sql:/docker-entrypoint-initdb.d/init.sql']
-    # --- NUEVA CONFIGURACIÓN DE HEALTHCHECK ---
+      MYSQL_ROOT_PASSWORD: m4vwKInT # <-- Aquí defines la contraseña para el usuario 'root' de MySQL
+      MYSQL_DATABASE: restaurant_delivery_db # <-- Asegúrate que esto coincida con 'CREATE DATABASE IF NOT EXISTS restaurant_delivery_db;' en tu SQL
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # <-- Aquí le dices a Docker que copie tu 'init.sql' al contenedor
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-      start_period: 20s # Darle tiempo inicial para que MySQL arranque
-      interval: 5s
-    restart: unless-stopped # Asegura que MySQL intente reiniciarse si falla
-    # --- FIN NUEVA CONFIGURACIÓN ---
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysecretpassword"] # <-- Usa la MISMA contraseña que arriba
+      interval: 10s
+      timeout: 5s
+      retries: 5    # --- FIN NUEVA CONFIGURACIÓN ---
 
   eureka:
     build: ./discovery
