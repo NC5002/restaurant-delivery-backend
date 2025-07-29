@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles; // <-- Importante
 import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,20 +19,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = { "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration" }
-)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-@ActiveProfiles("test") // <--- ¡ESTA ES LA ANOTACIÓN QUE FALTABA!
 class DishControllerIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
-
     @Autowired
     private DishRepository dishRepository;
     @Autowired
@@ -59,13 +52,15 @@ class DishControllerIntegrationTest extends AbstractIntegrationTest {
                 .categoryId(savedCategory.getId())
                 .build();
 
-        mockMvc.perform(post("/api/v1/dishes") // Se hace POST a la ruta completa
+        // CAMBIO: Se quita el prefijo /api/v1 de la ruta
+        mockMvc.perform(post("/dishes") 
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newDish)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Pizza Test"));
 
-        mockMvc.perform(get("/api/v1/dishes") // Se hace GET a la ruta completa
+        // CAMBIO: Se quita el prefijo /api/v1 de la ruta
+        mockMvc.perform(get("/dishes") 
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].name").value("Pizza Test"));
