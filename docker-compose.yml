@@ -11,7 +11,7 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql # <-- Aquí le dices a Docker que copie tu 'init.sql' al contenedor
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysecretpassword"] # <-- Usa la MISMA contraseña que arriba
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pm4vwKInT"] # <-- Usa la MISMA contraseña que arriba
       interval: 10s
       timeout: 5s
       retries: 5    # --- FIN NUEVA CONFIGURACIÓN ---
@@ -31,7 +31,7 @@ services:
   catalog:
     build: ./catalog
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/catalog_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_db
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
     # --- CAMBIAR depends_on para esperar el healthcheck de mysql ---
     depends_on:
@@ -44,7 +44,7 @@ services:
   order:
     build: ./order
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/order_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_db
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
     # --- CAMBIAR depends_on para esperar el healthcheck de mysql ---
     depends_on:
