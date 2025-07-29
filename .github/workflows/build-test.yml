@@ -1,0 +1,46 @@
+name: Build and Test Spring Microservices
+
+# Este workflow se ejecuta automáticamente cuando:
+# - Se hace un "push" a la rama 'main' (o 'master')
+# - Se abre un "pull request" hacia la rama 'main' (o 'master')
+on:
+  push:
+    branches:
+      - main # Si tu rama principal se llama 'master', cámbialo a 'master'
+  pull_request:
+    branches:
+      - main # Si tu rama principal se llama 'master', cámbialo a 'master'
+
+jobs:
+  build-test:
+    runs-on: windows-latest # Usa un sistema Windows proporcionado por GitHub para ejecutar el workflow
+    steps:
+      - name: Checkout Code # Descarga tu código del repositorio de GitHub
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17 # Configura Java 17 en el entorno de GitHub Actions
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin # Una distribución común de OpenJDK
+          java-version: '17'
+
+      - name: Configure Docker for Testcontainers # Asegura que Docker esté disponible para Testcontainers
+        # Los runners de 'windows-latest' de GitHub Actions suelen venir con Docker preinstalado.
+        # Este comando solo es para verificar que Docker está accesible y funcionando.
+        run: docker info
+
+      - name: Build and Test Discovery Service # Compila y ejecuta pruebas para el servicio 'discovery'
+        working-directory: ./discovery # Cambia al directorio del servicio 'discovery'
+        run: ./mvnw -q test # Ejecuta las pruebas (el '-q' es para menos salida en la consola)
+
+      - name: Build and Test Gateway Service # Compila y ejecuta pruebas para el servicio 'gateway'
+        working-directory: ./gateway # Cambia al directorio del servicio 'gateway'
+        run: ./mvnw -q test
+
+      - name: Build and Test Catalog Service # Compila y ejecuta pruebas para el servicio 'catalog'
+        working-directory: ./catalog # Cambia al directorio del servicio 'catalog'
+        run: ./mvnw -q test
+
+      - name: Build and Test Order Service # Compila y ejecuta pruebas para el servicio 'order'
+        working-directory: ./order # Cambia al directorio del servicio 'order'
+        run: ./mvnw -q test
