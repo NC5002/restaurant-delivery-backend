@@ -4,52 +4,56 @@ services:
   mysql:
     image: mysql:8
     environment:
-      MYSQL_ROOT_PASSWORD: m4vwKInT # <-- Aquí defines la contraseña para el usuario 'root' de MySQL
-      MYSQL_DATABASE: restaurant_delivery_db # <-- Asegúrate que esto coincida con 'CREATE DATABASE IF NOT EXISTS restaurant_delivery_db;' en tu SQL
+      MYSQL_ROOT_PASSWORD: m4vwKInT
+      MYSQL_DATABASE: restaurant_delivery_db
     ports:
       - "3306:3306"
     volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql # <-- Aquí le dices a Docker que copie tu 'init.sql' al contenedor
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pm4vwKInT"] # <-- Usa la MISMA contraseña que arriba
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pm4vwKInT"]
       interval: 10s
       timeout: 5s
-      retries: 5    # --- FIN NUEVA CONFIGURACIÓN ---
+      retries: 5
 
   eureka:
     build: ./discovery
     ports: ["8761:8761"]
     depends_on: [mysql]
+    healthcheck: # <--- ¡NUEVA CONFIGURACIÓN PARA EUREKA!
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"] # Usa el endpoint de salud de Spring Boot
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s # Espera 20 segundos antes de empezar a chequear
 
   gateway:
     build: ./gateway
     ports: ["8080:8080"]
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
-    depends_on: [eureka]
+    depends_on:
+      eureka: # <--- CAMBIO: Espera que Eureka esté healthy
+        condition: service_healthy
 
   catalog:
     build: ./catalog
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_db
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
-    # --- CAMBIAR depends_on para esperar el healthcheck de mysql ---
     depends_on:
       mysql:
-        condition: service_healthy # Espera hasta que mysql esté "healthy"
-      eureka:
-        condition: service_started # Eureka solo necesita estar iniciado, no necesariamente healthy para registrarse.
-    # --- FIN CAMBIO ---
+        condition: service_healthy
+      eureka: # <--- CAMBIO: Espera que Eureka esté healthy
+        condition: service_healthy
 
   order:
     build: ./order
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/restaurant_delivery_db
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka
-    # --- CAMBIAR depends_on para esperar el healthcheck de mysql ---
     depends_on:
       mysql:
         condition: service_healthy
-      eureka:
-        condition: service_started
-    # --- FIN CAMBIO ---
+      eureka: # <--- CAMBIO: Espera que Eureka esté healthy
+        condition: service_healthy
