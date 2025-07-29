@@ -1,15 +1,14 @@
-package com.example.catalog; // o com.example.order para el servicio order
+package com.example.catalog; // Asegúrate de que tu paquete sea correcto
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient; // <-- IMPORTA ESTO
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient; // <-- ¡Esta es la importante!
 
 @SpringBootApplication
-@EnableDiscoveryClient // <-- AÑADE ESTA ANOTACIÓN
-public class CatalogApplication { // o OrderApplication
+@EnableDiscoveryClient // <-- Asegúrate de que esta anotación esté presente
+public class CatalogApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(CatalogApplication.class, args);
     }
-
 }
