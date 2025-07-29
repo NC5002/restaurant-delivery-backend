@@ -2,15 +2,14 @@ name: CI/CD para Microservicios
 
 on:
   push:
-    branches: [ "main" ] # Se activa solo con push a la rama principal
+    branches: [ "main" ]
 
 jobs:
-  # --- TRABAJO 1: Construir y Probar ---
   build-test:
+    # Esta línea asegura que se use un runner de GitHub
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        # Definimos los servicios (deben coincidir con los nombres de las carpetas/módulos de Maven)
         service: [ catalog, order, gateway, discovery ]
     steps:
       - name: Checkout del código
@@ -24,19 +23,19 @@ jobs:
           cache: 'maven'
 
       - name: Ejecutar Pruebas para el servicio ${{ matrix.service }}
-        # El comando -pl ejecuta el build solo para el módulo especificado
-        run: mvn -B test --file ${{ matrix.service }}/pom.xml
+        # CAMBIO: Usamos -f en lugar de --file para compatibilidad
+        run: mvn -B test -f ${{ matrix.service }}/pom.xml
 
-  # --- TRABAJO 2: Construir y Publicar Imágenes Docker ---
   build-and-push-docker-image:
-    needs: build-test # Este trabajo solo se ejecuta si 'build-test' fue exitoso
+    needs: build-test
+    # Esta línea asegura que se use un runner de GitHub
     runs-on: ubuntu-latest
     strategy:
       matrix:
         service: [ catalog, order, gateway, discovery ]
     permissions:
       contents: read
-      packages: write # Permiso para escribir en GitHub Packages (GHCR)
+      packages: write
 
     steps:
       - name: Checkout del código
@@ -47,7 +46,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Este token lo provee GitHub automáticamente
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Construir y Publicar la imagen Docker
         run: |
